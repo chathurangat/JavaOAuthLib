@@ -36,9 +36,9 @@ public class OAuthUtil {
     }
 
 
-    public static Map<String,String>  populateUriQueryStringToMap(String uriQueryString){
+    public static Map<Object,Object>  populateUriQueryStringToMap(String uriQueryString){
 
-        Map<String,String> responseParameterMap = new HashMap<String, String>();
+        Map<Object,Object> responseParameterMap = new HashMap<Object, Object>();
         if(uriQueryString!=null){
             String responseArray[] = uriQueryString.split("&");
             for(String responseElement:responseArray){

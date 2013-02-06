@@ -5,7 +5,7 @@ import java.util.Map;
 public class OAuthResponse {
 
     private int responseCode;
-    private Map<String,String> responseParameters;
+    private Map<Object,Object> responseParameters;
 
     public int getResponseCode() {
         return responseCode;
@@ -15,11 +15,11 @@ public class OAuthResponse {
         this.responseCode = responseCode;
     }
 
-    public Map<String, String> getResponseParameters() {
+    public Map<Object, Object> getResponseParameters() {
         return responseParameters;
     }
 
-    public void setResponseParameters(Map<String, String> responseParameters) {
+    public void setResponseParameters(Map<Object, Object> responseParameters) {
         this.responseParameters = responseParameters;
     }
 }

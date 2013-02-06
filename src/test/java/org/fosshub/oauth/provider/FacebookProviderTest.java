@@ -2,7 +2,6 @@ package org.fosshub.oauth.provider;
 
 import org.apache.http.HttpStatus;
 import org.fosshub.oauth.config.OAuthConfiguration;
-import org.fosshub.oauth.exception.OAuthException;
 import org.fosshub.oauth.http.OAuthResponse;
 import org.testng.annotations.Test;
 

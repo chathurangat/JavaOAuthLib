@@ -4,7 +4,6 @@ import org.fosshub.oauth.exception.OAuthException;
 import org.fosshub.oauth.http.OAuthResponse;
 
 public interface OAuth2{
-
     /**
      * <p>
      *     method used to generate the authorization URL for the desired social network

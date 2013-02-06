@@ -10,6 +10,7 @@ import org.fosshub.oauth.http.OAuthResponse;
 import org.fosshub.oauth.util.OAuthUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.fosshub.oauth.config.OAuthKeyBox.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -50,6 +51,9 @@ public class FacebookProvider extends OAuth2Impl {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public OAuthResponse getAccessToken(String requestToken) throws OAuthException{
         OAuthResponse oAuthResponse =  new OAuthResponse();
@@ -64,11 +68,11 @@ public class FacebookProvider extends OAuth2Impl {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
             //setting up oauth request parameters
             Map<String,String> postParametersMap = new HashMap<String, String>();
-            postParametersMap.put("code",requestToken);
-            postParametersMap.put("client_id",oauthConfiguration.getApplicationId());
-            postParametersMap.put("client_secret",oauthConfiguration.getApplicationSecret());
-            postParametersMap.put("redirect_uri",oauthConfiguration.getRedirectUrl());
-            postParametersMap.put("grant_type","authorization_code");
+            postParametersMap.put(CODE,requestToken);
+            postParametersMap.put(CLIENT_ID,oauthConfiguration.getApplicationId());
+            postParametersMap.put(CLIENT_SECRET,oauthConfiguration.getApplicationSecret());
+            postParametersMap.put(REDIRECT_URI,oauthConfiguration.getRedirectUrl());
+            postParametersMap.put(GRANT_TYPE,AUTHORIZATION_CODE);
             writer.write(getUriQueryString(postParametersMap));
             writer.close();
             os.close();
@@ -156,7 +160,13 @@ public class FacebookProvider extends OAuth2Impl {
         return oAuthResponse;
     }
 
-
+    /**
+     * <p>
+     *     build the query string using the provided map of parameters.
+     * </p>
+     * @param paramMap will be {@link Map} and that contains set of parameters as key and value paris
+     * @return  built Uri Query String as {@link String}
+     */
     private String getUriQueryString(Map<String,String> paramMap){
         String url = "";
         for (Map.Entry<String, String> stringStringEntry : paramMap.entrySet()) {

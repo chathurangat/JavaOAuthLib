@@ -44,11 +44,11 @@ public class FacebookProvider extends OAuth2Impl {
         }
     }
 
-//    @Override
-//    public String getRequestToken() {
-//        //todo implementation should goes here
-//        return null;  //To change body of implemented methods use File | Settings | File Templates.
-//    }
+    @Override
+    public String getRequestToken() {
+        //todo implementation should goes here
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
     @Override
     public OAuthResponse getAccessToken(String requestToken) throws OAuthException{
@@ -90,16 +90,23 @@ public class FacebookProvider extends OAuth2Impl {
                 }
             }
             con.disconnect();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (ProtocolException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
+        catch (MalformedURLException ex) {
+            logger.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ",ACCESS_TOKEN_ENDPOINT);
+            throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
+        }
+        catch (UnsupportedEncodingException ex) {
+            logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
+            throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
+        }
+        catch (ProtocolException ex) {
+            logger.debug(" Selected HTTP Request method does not support with Access Token Endpoint [{}]",ACCESS_TOKEN_ENDPOINT);
+            throw new OAuthException("Selected HTTP Request method does not support with Access Token Endpoint ["+ACCESS_TOKEN_ENDPOINT+"]",ex);
+        }
+        catch (IOException ex) {
+            logger.debug(" IOException occurred in the FacebookProvider class and exception message [{}]",ex.getMessage());
+            throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
+        }
         return oAuthResponse;
     }
 

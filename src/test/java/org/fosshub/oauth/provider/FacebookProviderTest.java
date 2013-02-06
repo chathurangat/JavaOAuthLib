@@ -2,6 +2,7 @@ package org.fosshub.oauth.provider;
 
 import org.apache.http.HttpStatus;
 import org.fosshub.oauth.config.OAuthConfiguration;
+import org.fosshub.oauth.exception.OAuthException;
 import org.fosshub.oauth.http.OAuthResponse;
 import org.testng.annotations.Test;
 
@@ -20,6 +21,7 @@ public class FacebookProviderTest {
         FacebookProvider facebookProvider = new FacebookProvider(oAuthConfiguration);
         String url = facebookProvider.getAuthorizationUrl();
         System.out.println("Authorzation URL ["+url+"]");
+
 //        OAuthResponse oAuthResponse = facebookProvider.getAccessToken("AQDwFGeijYMCDQc2MsGVLu6jKlnCrWw33xziWC3Dcu0AmskvtwRGIqQtlNU7pzKc-O_O4sI1vjSgTM0VYsZQbR6YXIkVBbfGOlxIoDOteHsZB5jCFpVHNRAI_LFY41ju84UtSJz_ycm3DQn9oMeHSAwDwChIMvyZNJPDoNhHr9nRFt6Q8H00-Mgj0-8Ee__ZNvBF1e-alXVoMGa9e1NzAQwz");
 
 //        if(oAuthResponse.getResponseCode()== HttpStatus.SC_OK){

@@ -4,14 +4,25 @@ import java.util.Map;
 
 public class OAuthResponse {
 
-    private int responseCode;
+//    private int responseCode;
+    private OAuthResponseCode responseCode;
     private Map<Object,Object> responseParameters;
+    private int httpResponseCode;
 
-    public int getResponseCode() {
+//    public int getResponseCode() {
+//        return responseCode;
+//    }
+//
+//    public void setResponseCode(int responseCode) {
+//        this.responseCode = responseCode;
+//    }
+
+
+    public OAuthResponseCode getResponseCode() {
         return responseCode;
     }
 
-    public void setResponseCode(int responseCode) {
+    public void setResponseCode(OAuthResponseCode responseCode) {
         this.responseCode = responseCode;
     }
 
@@ -21,5 +32,13 @@ public class OAuthResponse {
 
     public void setResponseParameters(Map<Object, Object> responseParameters) {
         this.responseParameters = responseParameters;
+    }
+
+    public int getHttpResponseCode() {
+        return httpResponseCode;
+    }
+
+    public void setHttpResponseCode(int httpResponseCode) {
+        this.httpResponseCode = httpResponseCode;
     }
 }

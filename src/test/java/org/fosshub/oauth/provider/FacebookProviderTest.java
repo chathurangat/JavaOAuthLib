@@ -1,8 +1,8 @@
 package org.fosshub.oauth.provider;
 
-import org.apache.http.HttpStatus;
 import org.fosshub.oauth.config.OAuthConfiguration;
 import org.fosshub.oauth.http.OAuthResponse;
+import static org.fosshub.oauth.http.OAuthResponseCode.*;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -29,7 +29,7 @@ public class FacebookProviderTest {
 //            facebookProvider.getProtectedResource(oAuthResponse.getResponseParameters().get("access_token"));
            OAuthResponse oAuthResponse = facebookProvider.getProtectedResource("AAAGGWvVJURYBAEwZBcxx9EWAUC7KdL416J2jbffpXPAcxzK31fqkFtN8pPBS8iZAoch3OrZAZAQvT0gyfQU8iPFxWz8dfsghqV9MGBNfjQZDZD");
 
-        if(oAuthResponse.getResponseCode()== HttpStatus.SC_OK){
+        if(oAuthResponse.getResponseCode()== OAUTH_RESPONSE_SUCCESS){
             Map<Object,Object> resourceDataMap = oAuthResponse.getResponseParameters();
 
             for(Map.Entry<Object,Object> entry:resourceDataMap.entrySet()){

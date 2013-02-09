@@ -2,7 +2,6 @@ package org.fosshub.oauth.provider;
 
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
-import org.apache.http.HttpStatus;
 import org.fosshub.oauth.api.impl.OAuth2Impl;
 import org.fosshub.oauth.config.OAuthConfiguration;
 import org.fosshub.oauth.exception.OAuthException;
@@ -10,7 +9,9 @@ import org.fosshub.oauth.http.OAuthResponse;
 import org.fosshub.oauth.util.OAuthUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.servlet.http.HttpServletRequest;
 import static org.fosshub.oauth.config.OAuthKeyBox.*;
+import static org.fosshub.oauth.http.OAuthResponseCode.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -46,10 +47,42 @@ public class FacebookProvider extends OAuth2Impl {
     }
 
     @Override
-    public String getRequestToken() {
-        //todo implementation should goes here
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public OAuthResponse getRequestToken(HttpServletRequest request) {
+        //todo error handling with error codes
+        OAuthResponse oAuthResponse =  new OAuthResponse();
+        Map<Object,Object> responseParamMap  = new HashMap<Object, Object>();
+        if(request!=null){
+            Enumeration headerNames = request.getHeaderNames();
+            while(headerNames.hasMoreElements()) {
+                String headerName = (String)headerNames.nextElement();
+                System.out.println(" header name ["+headerName+"] and value ["+request.getHeader(headerName)+"]");
+            }
+            if(request.getParameterMap().containsKey(CODE)){
+                logger.info(" request token was found ");
+                responseParamMap.put(REQUEST_TOKEN,request.getParameter(CODE));
+                oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
+                oAuthResponse.setResponseParameters(responseParamMap);
+            }
+            else if(request.getParameterMap().containsKey("error")){
+                responseParamMap.put(ERROR_CODE,request.getParameter("error"));
+                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
+                oAuthResponse.setResponseParameters(responseParamMap);
+            }
+            else{
+                logger.info(" either request token or error code parameters are missing in HTTP GET request URL ");
+                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
+                //todo error messages handling
+                responseParamMap.put(ERROR_CODE,"invalid_request_uri");
+                oAuthResponse.setResponseParameters(responseParamMap);
+            }
+            return oAuthResponse;
+        }
+        else{
+            logger.info(" HTTP request is null ");
+            throw new OAuthException("Invalid HTTP Request");
+        }
     }
+
 
     /**
      * {@inheritDoc}
@@ -65,7 +98,7 @@ public class FacebookProvider extends OAuth2Impl {
             con.setRequestMethod("POST");
 
             OutputStream os = con.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, URL_ENCODE));
             //setting up oauth request parameters
             Map<String,String> postParametersMap = new HashMap<String, String>();
             postParametersMap.put(CODE,requestToken);
@@ -81,9 +114,9 @@ public class FacebookProvider extends OAuth2Impl {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
             //setting up the response code
-            oAuthResponse.setResponseCode(con.getResponseCode());
+            oAuthResponse.setHttpResponseCode(con.getResponseCode());
 
-            if(con.getResponseCode() == HttpStatus.SC_OK){
+            if(con.getResponseCode() == OAUTH_RESPONSE_SUCCESS.getCode()){
                 logger.info(" response was successfully received from the facebook.com ");
                 String  responseString = reader.readLine();
                 if (responseString != null)
@@ -134,9 +167,9 @@ public class FacebookProvider extends OAuth2Impl {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
             //setting up the response code
-            oAuthResponse.setResponseCode(con.getResponseCode());
+            oAuthResponse.setHttpResponseCode(con.getResponseCode());
 
-            if(con.getResponseCode() == HttpStatus.SC_OK){
+            if(con.getResponseCode() == OAUTH_RESPONSE_SUCCESS.getCode()){
                 System.out.println(" getting protected resource \n");
                 //if the response was successfully received
                 String  responseString = reader.readLine();
@@ -173,9 +206,9 @@ public class FacebookProvider extends OAuth2Impl {
             Map.Entry thisEntry = (Map.Entry) stringStringEntry;
             try {
                 url = url +thisEntry.getKey()+"="+URLEncoder.encode((String)thisEntry.getValue(),URL_ENCODE)+"&";
-            } catch (UnsupportedEncodingException e) {
-                //todo handle error message
-                e.printStackTrace();
+            } catch (UnsupportedEncodingException ex) {
+                logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
+                throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
             }
         }
         if(url.length()!=0){

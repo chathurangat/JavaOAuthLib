@@ -48,7 +48,7 @@ public class OAuthConfiguration {
             state = OAuthUtil.generateRandomString();
         }
         else{
-            state = OAuthUtil.getMD5EncodedValue(state);
+            state = OAuthUtil.md5Encoder(state);
         }
         return state;
     }

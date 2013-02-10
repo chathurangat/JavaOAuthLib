@@ -2,16 +2,15 @@ package org.fosshub.oauth.http;
 
 public enum OAuthResponseCode {
 
-    OAUTH_RESPONSE_SUCCESS(200),
-    OAUTH_RESPONSE_ERROR(300);
+    OAUTH_RESPONSE_SUCCESS("success");
 
-    private int code;
+    private String code;
 
-    private OAuthResponseCode(int code){
+    private OAuthResponseCode(String code){
      this.code=code;
     }
 
-    public int getCode() {
+    public String getCode() {
         return code;
     }
 }

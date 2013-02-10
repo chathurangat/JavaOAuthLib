@@ -19,15 +19,25 @@ public interface OAuth2{
 
     /**
      * <p>
+     *     method used to get the access token by providing the request token response retrieved.
+     * </p>
+     * @param requestTokenResponse as {@link OAuthResponse}
+     * @return instance of {@link OAuthResponse} with encapsulated response parameters (including access token)
+     * @throws OAuthException if any exception occurs
+     */
+    OAuthResponse getAccessToken(OAuthResponse requestTokenResponse) throws OAuthException;
+
+    /**
+     * <p>
      *     method used to get the access token by providing the request token retrieved.
-     *     access token will be used to access the protected resource.
+     *     this method was implemented to get the access token by providing only the request token as String param
      * </p>
      * @param requestToken as {@link String}
      * @return instance of {@link OAuthResponse} with encapsulated response parameters (including access token)
      * @throws OAuthException if any exception occurs
      */
-    OAuthResponse getAccessToken(String requestToken) throws OAuthException;
+    OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException;
 
-    OAuthResponse getProtectedResource(String accessToken) throws OAuthException;
+    OAuthResponse getProtectedResource(OAuthResponse accessTokenResponse) throws OAuthException;
 }
 

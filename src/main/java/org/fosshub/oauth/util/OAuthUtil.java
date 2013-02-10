@@ -11,8 +11,8 @@ import java.util.Map;
 
 public final class OAuthUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(OAuthUtil.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuthUtil.class);
+    private static final int BASE_16=16;
     /**
      * <p>
      *  constructor visibility should be private because the class
@@ -56,9 +56,9 @@ public final class OAuthUtil {
                 //Update input string in message digest
                 digest.update(inputValue.getBytes(), 0, inputValue.length());
                 //Converts message digest value in base 16 (hex)
-                return new BigInteger(1, digest.digest()).toString(16);
+                return new BigInteger(1, digest.digest()).toString(BASE_16);
             } catch (NoSuchAlgorithmException ex) {
-                logger.debug(" exception occurred while encoding [{}] value with MD5 algorithm.. exception message [{}]", inputValue, ex.getMessage());
+                LOGGER.debug(" exception occurred while encoding [{}] value with MD5 algorithm.. exception message [{}]", inputValue, ex.getMessage());
                 return null;
             }
     }
@@ -73,7 +73,7 @@ public final class OAuthUtil {
      */
     public static Map<Object,Object>  populateUriQueryStringToMap(String uriQueryString){
         Map<Object,Object> responseParameterMap = new HashMap<Object, Object>();
-        logger.debug(" extracting key and value pairs from the given URI Query String [{}]",uriQueryString);
+        LOGGER.debug(" extracting key and value pairs from the given URI Query String [{}]", uriQueryString);
         if(uriQueryString!=null){
             String responseArray[] = uriQueryString.split("&");
             for(String responseElement:responseArray){

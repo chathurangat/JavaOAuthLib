@@ -13,14 +13,12 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.net.*;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.fosshub.oauth.config.OAuthKeyBox.*;
-import static org.fosshub.oauth.http.OAuthResponseCode.OAUTH_RESPONSE_ERROR;
-import static org.fosshub.oauth.http.OAuthResponseCode.OAUTH_RESPONSE_SUCCESS;
-import static org.fosshub.oauth.exception.OAuthErrorKeyBox.*;
+import static org.fosshub.oauth.exception.OAuthErrorCode.*;
+import static org.fosshub.oauth.http.OAuthResponseCode.*;
 
 //todo exception handling
 //todo log4j integration
@@ -28,16 +26,17 @@ import static org.fosshub.oauth.exception.OAuthErrorKeyBox.*;
 //todo handle json parsing
 public class FacebookProvider extends OAuth2Impl {
 
-    private static final Logger logger  = LoggerFactory.getLogger(FacebookProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FacebookProvider.class);
 
     private static final String REQUEST_TOKEN_ENDPOINT = "https://www.facebook.com/dialog/oauth?response_type=%s&client_id=%s&redirect_uri=%s&state=%s";
     private static final String ACCESS_TOKEN_ENDPOINT = "https://graph.facebook.com/oauth/access_token";
     private static final String PROTECTED_RESOURCE_ENDPOINT = "https://graph.facebook.com/me?access_token=%s";
 
     private Map<Object,Object> responseParamMap  = new HashMap<Object, Object>();
+    private OAuthConfiguration oAuthConfiguration;
 
     public FacebookProvider(OAuthConfiguration oAuthConfiguration){
-        super.oauthConfiguration = oAuthConfiguration;
+        this.oAuthConfiguration = oAuthConfiguration;
     }
 
     /**
@@ -46,10 +45,13 @@ public class FacebookProvider extends OAuth2Impl {
     @Override
     public String getAuthorizationUrl() throws OAuthException{
         try {
-            return String.format(REQUEST_TOKEN_ENDPOINT, URLEncoder.encode("code", URL_ENCODE) ,URLEncoder.encode(oauthConfiguration.getApplicationId(), URL_ENCODE), URLEncoder.encode(oauthConfiguration.getRedirectUrl(), URL_ENCODE),URLEncoder.encode(oauthConfiguration.getState(), URL_ENCODE));
+            return String.format(REQUEST_TOKEN_ENDPOINT, URLEncoder.encode("code", URL_ENCODE) ,
+                    URLEncoder.encode(oAuthConfiguration.getApplicationId(), URL_ENCODE),
+                    URLEncoder.encode(oAuthConfiguration.getRedirectUrl(), URL_ENCODE),
+                    URLEncoder.encode(oAuthConfiguration.getState(), URL_ENCODE));
         } catch (UnsupportedEncodingException ex) {
-            logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
-            throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
+            LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
+            throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
         }
     }
 
@@ -57,35 +59,26 @@ public class FacebookProvider extends OAuth2Impl {
     public OAuthResponse getRequestToken(HttpServletRequest request) throws OAuthException{
         OAuthResponse oAuthResponse =  new OAuthResponse();
         if(request!=null){
-            Enumeration headerNames = request.getHeaderNames();
-            while(headerNames.hasMoreElements()) {
-                String headerName = (String)headerNames.nextElement();
-                System.out.println(" header name ["+headerName+"] and value ["+request.getHeader(headerName)+"]");
-            }
             if(request.getParameterMap().containsKey(CODE)){
-                logger.info(" request token was found ");
+                LOGGER.info(" request token was found ");
                 responseParamMap.put(REQUEST_TOKEN,request.getParameter(CODE));
                 oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
                 oAuthResponse.setResponseParameters(responseParamMap);
             }
             else if(request.getParameterMap().containsKey("error")){
                 String error = request.getParameter("error");
-                logger.info(" request token was not received due to error [{}]",error);
-                responseParamMap.put(ERROR_CODE,error);
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
-                oAuthResponse.setResponseParameters(responseParamMap);
+                LOGGER.info(" request token was not received due to error [{}]", error);
+                throw new OAuthException(error," request token was not received due to error ["+error+"]");
             }
             else{
-                logger.info(" either request token or error code parameters are missing in HTTP GET request URL ");
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
-                responseParamMap.put(ERROR_CODE,INVALID_REQUEST_URI);
-                oAuthResponse.setResponseParameters(responseParamMap);
+                LOGGER.info(" either request token or error code parameters are missing in HTTP GET request URL ");
+                throw new OAuthException(INVALID_REQUEST_URI," either request token or error code parameters are missing in HTTP GET request URL");
             }
             return oAuthResponse;
         }
         else{
-            logger.info(" HTTP request is null ");
-            throw new OAuthException("Invalid HTTP Request");
+            LOGGER.info(" HTTP request is null ");
+            throw new OAuthException(INVALID_HTTP_REQUEST,"HTTP Request is null");
         }
     }
 
@@ -93,126 +86,143 @@ public class FacebookProvider extends OAuth2Impl {
      * {@inheritDoc}
      */
     @Override
-    public OAuthResponse getAccessToken(String requestToken) throws OAuthException{
+    public OAuthResponse getAccessToken(OAuthResponse requestTokenResponse) throws OAuthException{
         OAuthResponse oAuthResponse =  new OAuthResponse();
-        try{
-            URL u = new URL (ACCESS_TOKEN_ENDPOINT);
-            HttpURLConnection con = (HttpURLConnection) u.openConnection ();
-            con.setDoInput(true);
-            con.setDoOutput(true);
-            con.setRequestMethod(HTTP_POST);
+        //checking whether the valid oauth request token response
+        if(isTokenResponseValid(requestTokenResponse,REQUEST_TOKEN)){
+            try{
+                URL u = new URL (ACCESS_TOKEN_ENDPOINT);
+                HttpURLConnection con = (HttpURLConnection) u.openConnection ();
+                con.setDoInput(true);
+                con.setDoOutput(true);
+                con.setRequestMethod(HTTP_POST);
 
-            OutputStream os = con.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, URL_ENCODE));
-            //setting up oauth request parameters
-            Map<String,String> postParametersMap = new HashMap<String, String>();
-            postParametersMap.put(CODE,requestToken);
-            postParametersMap.put(CLIENT_ID,oauthConfiguration.getApplicationId());
-            postParametersMap.put(CLIENT_SECRET,oauthConfiguration.getApplicationSecret());
-            postParametersMap.put(REDIRECT_URI,oauthConfiguration.getRedirectUrl());
-            postParametersMap.put(GRANT_TYPE,AUTHORIZATION_CODE);
-            writer.write(getUriQueryString(postParametersMap));
-            writer.close();
-            os.close();
-            logger.info(" connecting with facebook.com .....");
-            con.connect();
+                OutputStream os = con.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, URL_ENCODE));
+                //setting up oauth request parameters
+                Map<String,String> postParametersMap = new HashMap<String, String>();
+                postParametersMap.put(CODE,(String)requestTokenResponse.getResponseParameters().get(REQUEST_TOKEN));
+                postParametersMap.put(CLIENT_ID,oAuthConfiguration.getApplicationId());
+                postParametersMap.put(CLIENT_SECRET,oAuthConfiguration.getApplicationSecret());
+                postParametersMap.put(REDIRECT_URI,oAuthConfiguration.getRedirectUrl());
+                postParametersMap.put(GRANT_TYPE,AUTHORIZATION_CODE);
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            //setting up the response code
-            oAuthResponse.setHttpResponseCode(con.getResponseCode());
+                writer.write(getUriQueryString(postParametersMap));
+                writer.close();
+                os.close();
+                LOGGER.info(" connecting with facebook.com .....");
+                con.connect();
 
-            if(con.getResponseCode() == OAUTH_RESPONSE_SUCCESS.getCode()){
-                logger.info(" response was successfully received from the facebook.com ");
-                //setting up the oauth success response code
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
-                String  responseString = reader.readLine();
-                if (responseString != null)
-                {
-                    logger.info("extracting the response parameters and assign them to array");
-                    Map<Object,Object> responseParametersMap = OAuthUtil.populateUriQueryStringToMap(responseString);
-                    oAuthResponse.setResponseParameters(responseParametersMap);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                //setting up the response code
+                oAuthResponse.setHttpResponseCode(con.getResponseCode());
+
+                if(con.getResponseCode() == HTTP_OK){
+                    LOGGER.info(" response was successfully received from the facebook.com ");
+                    //setting up the oauth success response code
+                    oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
+                    String  responseString = reader.readLine();
+                    if (responseString != null)
+                    {
+                        LOGGER.info("extracting the response parameters and assign them to array");
+                        Map<Object,Object> responseParametersMap = OAuthUtil.populateUriQueryStringToMap(responseString);
+                        oAuthResponse.setResponseParameters(responseParametersMap);
+                    }
                 }
+                else{
+                    LOGGER.info(" access token response was not successful and error code  [{}] received", con.getResponseCode());
+                    throw new OAuthException(ACCESS_TOKEN_NOT_RECEIVED, String.format("access token response was not successful and error code  [%d] received", con.getResponseCode()));
+                }
+                con.disconnect();
             }
-            else{
-                logger.info(" access token response was not successful and error code [{}]received",con.getResponseCode());
-                //setting up oauth error response code
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
-                responseParamMap.put(ERROR_CODE,ACCESS_TOKEN_NOT_RECEIVED);
-                oAuthResponse.setResponseParameters(responseParamMap);
+            catch (MalformedURLException ex) {
+                LOGGER.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ", ACCESS_TOKEN_ENDPOINT);
+                throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
             }
-            con.disconnect();
-        }
-        catch (MalformedURLException ex) {
-            logger.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ",ACCESS_TOKEN_ENDPOINT);
-            throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
-        }
-        catch (UnsupportedEncodingException ex) {
-            logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
-            throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
-        }
-        catch (ProtocolException ex) {
-            logger.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]",HTTP_POST,ACCESS_TOKEN_ENDPOINT);
-            throw new OAuthException("Selected HTTP Request method ["+HTTP_POST+"] does not support with Access Token Endpoint ["+ACCESS_TOKEN_ENDPOINT+"]",ex);
-        }
-        catch (IOException ex) {
-            logger.debug(" IOException occurred in the FacebookProvider class and exception message [{}]",ex.getMessage());
-            throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
+            catch (UnsupportedEncodingException ex) {
+                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
+                throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
+            }
+            catch (ProtocolException ex) {
+                LOGGER.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]", HTTP_POST, ACCESS_TOKEN_ENDPOINT);
+                throw new OAuthException(String.format("Selected HTTP Request method [%s] does not support with Access Token Endpoint [%s]", HTTP_POST, ACCESS_TOKEN_ENDPOINT),ex);
+            }
+            catch (IOException ex) {
+                LOGGER.debug(" IOException occurred in the FacebookProvider class and exception message [{}]", ex.getMessage());
+                throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
+            }
         }
         return oAuthResponse;
     }
 
-    @Override
-    public OAuthResponse getProtectedResource(String accessToken) throws OAuthException{
-        OAuthResponse oAuthResponse =  new OAuthResponse();
-        try{
-            String url  = String.format(PROTECTED_RESOURCE_ENDPOINT,URLEncoder.encode(accessToken,URL_ENCODE));
-            URL u = new URL (url);
-            HttpURLConnection con = (HttpURLConnection) u.openConnection ();
-            con.setDoInput(true);
-            con.setRequestMethod(HTTP_GET);
-            logger.info(" trying to make a connection with [{}]",url);
-            con.connect();
-            logger.info("connected and response code [{}]",con.getResponseCode());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            //setting up the http response code
-            oAuthResponse.setHttpResponseCode(con.getResponseCode());
 
-            if(con.getResponseCode() == OAUTH_RESPONSE_SUCCESS.getCode()){
-                //setting up oauth success response code
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
-                //if the response was successfully received
-                String  responseString = reader.readLine();
-                logger.info(" received the response [{}]",responseString);
-                JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(responseString);
-                Map<Object,Object> jsonDataMap = parseJsonToMap(jsonObject);
-                oAuthResponse.setResponseParameters(jsonDataMap);
+    @Override
+    public OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException {
+        LOGGER.info(" get the access token from the request token [{}]", requestToken);
+        if(requestToken!=null){
+            OAuthResponse oAuthResponse =  new OAuthResponse();
+            oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
+            responseParamMap.put(REQUEST_TOKEN,requestToken);
+            oAuthResponse.setResponseParameters(responseParamMap);
+            //reusing the implementation of the getAccessToken method
+            return this.getAccessToken(oAuthResponse);
+        }
+        else {
+            LOGGER.info(" invalid request token [{}]", requestToken);
+            throw new OAuthException(" request token is null");
+        }
+    }
+
+    @Override
+    public OAuthResponse getProtectedResource(OAuthResponse accessTokenResponse) throws OAuthException{
+        OAuthResponse oAuthResponse =  new OAuthResponse();
+        if(isTokenResponseValid(accessTokenResponse,ACCESS_TOKEN)){
+            try{
+                String url  = String.format(PROTECTED_RESOURCE_ENDPOINT,URLEncoder.encode((String)accessTokenResponse.getResponseParameters().get(ACCESS_TOKEN),URL_ENCODE));
+                URL u = new URL (url);
+                HttpURLConnection con = (HttpURLConnection) u.openConnection ();
+                con.setDoInput(true);
+                con.setRequestMethod(HTTP_GET);
+                LOGGER.info(" trying to make a connection with [{}]", url);
+                con.connect();
+                LOGGER.info("connected and response code [{}]", con.getResponseCode());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                //setting up the http response code
+                oAuthResponse.setHttpResponseCode(con.getResponseCode());
+
+                if(con.getResponseCode() == HTTP_OK){
+                    //setting up oauth success response code
+                    oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
+                    //if the response was successfully received
+                    String  responseString = reader.readLine();
+                    LOGGER.info(" received the response [{}]", responseString);
+                    JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(responseString);
+                    Map<Object,Object> jsonDataMap = parseJsonToMap(jsonObject);
+                    oAuthResponse.setResponseParameters(jsonDataMap);
+                }
+                else{
+                    LOGGER.info("protected resource not found ");
+                    throw new OAuthException(PROTECTED_RESOURCE_NOT_FOUND," protected resource data not retrieved");
+                }
+                con.disconnect();
+                LOGGER.info(" connection terminated ");
             }
-            else{
-                //setting up oauth error response code
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_ERROR);
-                //todo change
-                responseParamMap.put(ERROR_CODE,PROTECTED_RESOURCE_NOT_FOUND);
-                oAuthResponse.setResponseParameters(responseParamMap);
-                //todo setting up the error code
+            catch (MalformedURLException ex) {
+                LOGGER.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ", ACCESS_TOKEN_ENDPOINT);
+                throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
             }
-            con.disconnect();
-            logger.info(" connection terminated ");
-        }
-        catch (MalformedURLException ex) {
-            logger.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ",ACCESS_TOKEN_ENDPOINT);
-            throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
-        }
-        catch (UnsupportedEncodingException ex) {
-            logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
-            throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
-        }
-        catch (ProtocolException ex) {
-            logger.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]",HTTP_GET,ACCESS_TOKEN_ENDPOINT);
-            throw new OAuthException("Selected HTTP Request method ["+HTTP_GET+"] does not support with Access Token Endpoint ["+ACCESS_TOKEN_ENDPOINT+"]",ex);
-        }
-        catch (IOException ex) {
-            logger.debug(" IOException occurred in the FacebookProvider class and exception message [{}]",ex.getMessage());
-            throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
+            catch (UnsupportedEncodingException ex) {
+                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
+                throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
+            }
+            catch (ProtocolException ex) {
+                LOGGER.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]", HTTP_GET, ACCESS_TOKEN_ENDPOINT);
+                throw new OAuthException(String.format("Selected HTTP Request method [%s] does not support with Access Token Endpoint [%s]", HTTP_GET, ACCESS_TOKEN_ENDPOINT),ex);
+            }
+            catch (IOException ex) {
+                LOGGER.debug(" IOException occurred in the FacebookProvider class and exception message [{}]", ex.getMessage());
+                throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
+            }
         }
         return oAuthResponse;
     }
@@ -232,8 +242,8 @@ public class FacebookProvider extends OAuth2Impl {
             try {
                 url = url +thisEntry.getKey()+"="+URLEncoder.encode((String)thisEntry.getValue(),URL_ENCODE)+"&";
             } catch (UnsupportedEncodingException ex) {
-                logger.debug("URL Encoder [{}] is not supported ",URL_ENCODE);
-                throw new OAuthException("URL Encode ["+URL_ENCODE+"] is not supported",ex);
+                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
+                throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
             }
         }
         if(url.length()!=0){
@@ -252,7 +262,7 @@ public class FacebookProvider extends OAuth2Impl {
      * @return Map<Object,Object> that contains extracted key and value pair from the json object
      */
     private Map<Object,Object> parseJsonToMap(JSONObject jsonObject){
-        logger.debug(" parsing JSON response [{}] to java.util.Map ",jsonObject);
+        LOGGER.debug(" parsing JSON response [{}] to java.util.Map ", jsonObject);
         Map<Object,Object> facebookDataMap =  new HashMap<Object, Object>();
         //extracting data from json object and populate them in Map
         facebookDataMap.put(ID,jsonObject.get(ID));
@@ -264,5 +274,33 @@ public class FacebookProvider extends OAuth2Impl {
         facebookDataMap.put(HOME_TOWN,jsonObject.getJSONObject(HOME_TOWN).get(NAME));
         facebookDataMap.put(LOCATION,jsonObject.getJSONObject(LOCATION).get(NAME));
         return facebookDataMap;
+    }
+
+    /**
+     *<p>
+     *     check the validity of the given oauth response against the provided token type
+     *</p>
+     * @param oAuthResponse as {@link OAuthResponse}
+     * @param tokenType as {@link String}
+     * @return true if the given response is valid with the token type. otherwise returns false.
+     * @throws OAuthException
+     */
+    private boolean isTokenResponseValid(OAuthResponse oAuthResponse,String tokenType) throws OAuthException{
+        if(oAuthResponse!=null && oAuthResponse.getResponseCode() == OAUTH_RESPONSE_SUCCESS && tokenType!=null){
+            //check whether the given token is available in the response parameters
+            if(oAuthResponse.getResponseParameters().containsKey(tokenType)){
+                return true;
+            }
+            else {
+                LOGGER.info("response does not contain the Token [{}]", tokenType);
+                throw new OAuthException(TOKEN_MISSING, String.format("response does not contain the token [%s]", tokenType));
+            }
+        }
+        else if(tokenType==null){
+            throw new OAuthException(INVALID_TOKEN_TYPE,"Invalid token type.... Token type is null");
+        }
+        else{
+            throw new OAuthException(INVALID_OAUTH_RESPONSE,"Invalid oauth response....");
+        }
     }
 }

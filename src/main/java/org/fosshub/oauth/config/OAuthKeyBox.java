@@ -21,11 +21,11 @@ public final class OAuthKeyBox {
     public static final String AUTHORIZATION_CODE = "authorization_code";
     public static final String REQUEST_TOKEN = "request_token";
     public static final String ACCESS_TOKEN = "access_token";
-    public static final String ERROR_CODE = "error_code";
 
-    //http request methods
+    //http related keys
     public static final String HTTP_GET = "GET";
     public static final String HTTP_POST = "POST";
+    public static final int HTTP_OK = 200;
 
     //encoding keys
     public static final String MD5 = "MD5";

@@ -5,7 +5,7 @@ import org.fosshub.oauth.config.OAuthConfiguration;
 
 public abstract class OAuth2Impl implements OAuth2 {
 
-    protected OAuthConfiguration oauthConfiguration;
+    private OAuthConfiguration oauthConfiguration;
 
     public OAuthConfiguration getOAuthConfiguration() {
         return oauthConfiguration;

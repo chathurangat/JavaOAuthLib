@@ -6,27 +6,31 @@
  * @Email chathuranga.t@gmail.com
  */
 package org.fosshub.oauth.exception;
+
 //todo exception handling
 public class OAuthException extends Exception{
 
     private String exceptionMessage;
+    private String errorCode;
 
-    public OAuthException(String message, Throwable throwable){
+    public OAuthException(String exceptionMessage) {
+        this.exceptionMessage = exceptionMessage;
+    }
+
+    public OAuthException(String exceptionMessage,Throwable throwable) {
         super(throwable);
-        this.exceptionMessage = message;
+        this.exceptionMessage = exceptionMessage;
     }
 
-    public OAuthException(Throwable throwable) {
+    public OAuthException(String errorCode,String exceptionMessage) {
+        this.exceptionMessage = exceptionMessage;
+        this.errorCode = errorCode;
+    }
+
+    public OAuthException(String errorCode,String exceptionMessage,Throwable throwable) {
         super(throwable);
-    }
-
-    public OAuthException(String message) {
-        super(message);
-        this.exceptionMessage = message;
-    }
-
-    public OAuthException() {
-        super();
+        this.exceptionMessage = exceptionMessage;
+        this.errorCode = errorCode;
     }
 
     public String getExceptionMessage() {
@@ -35,5 +39,13 @@ public class OAuthException extends Exception{
 
     public void setExceptionMessage(String exceptionMessage) {
         this.exceptionMessage = exceptionMessage;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 }

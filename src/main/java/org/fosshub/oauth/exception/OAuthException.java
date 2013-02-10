@@ -7,12 +7,11 @@
  */
 package org.fosshub.oauth.exception;
 //todo exception handling
-public class OAuthException extends RuntimeException{
+public class OAuthException extends Exception{
 
-//    private int errorCode;
     private String exceptionMessage;
 
-    public OAuthException(String message, Throwable throwable) {
+    public OAuthException(String message, Throwable throwable){
         super(throwable);
         this.exceptionMessage = message;
     }

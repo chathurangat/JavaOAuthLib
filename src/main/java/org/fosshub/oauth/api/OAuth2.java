@@ -15,7 +15,7 @@ public interface OAuth2{
      */
     String getAuthorizationUrl() throws OAuthException;
 
-    OAuthResponse getRequestToken(HttpServletRequest request);
+    OAuthResponse getRequestToken(HttpServletRequest request) throws OAuthException;
 
     /**
      * <p>
@@ -28,6 +28,6 @@ public interface OAuth2{
      */
     OAuthResponse getAccessToken(String requestToken) throws OAuthException;
 
-    OAuthResponse getProtectedResource(String accessToken);
+    OAuthResponse getProtectedResource(String accessToken) throws OAuthException;
 }
 

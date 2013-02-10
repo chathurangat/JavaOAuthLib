@@ -1,17 +1,27 @@
 package org.fosshub.oauth.util;
 
-import org.fosshub.oauth.exception.OAuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.fosshub.oauth.config.OAuthKeyBox.MD5;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthUtil {
+public final class OAuthUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(OAuthUtil.class);
+
+    /**
+     * <p>
+     *  constructor visibility should be private because the class
+     *  contains only the static methods.
+     * </p>
+     */
+    private OAuthUtil(){
+
+    }
     /**
      *<p>
      *     generate random text(String)
@@ -19,19 +29,17 @@ public class OAuthUtil {
      * @return randomly generated text as {@link String}
      */
     public static String generateRandomString(){
-        return md5Encoder(Long.toString(generateRandomNumber(10,10000)));
+            return md5Encoder(Double.toString(generateRandomNumber()));
     }
 
     /**
      * <p>
      *     generate a random number within the given minimum and maximum range
      * </p>
-     * @param minRange  minimum value range as {@link Integer}
-     * @param maxRange  maximum value range as {@link Integer}
-     * @return the generated random number as {@link Integer}
+     * @return the generated random number as {@link Double}
      */
-    private static int generateRandomNumber(int minRange,int maxRange){
-        return (minRange + (int) (Math.random() * maxRange));
+    private static double generateRandomNumber(){
+        return (Math.random() + (Math.random() * Math.random()));
     }
 
     /**
@@ -39,25 +47,20 @@ public class OAuthUtil {
      *     method used to convert the given input parameter for the md5 encoded value
      * </p>
      * @param inputValue as {@link String}
-     * @return the md5 encoded input parameter as {@link String}
+     * @return the md5 encoded input parameter as {@link String}  or returns null if any exception occurs
      */
     public static String md5Encoder(String inputValue){
-        if(inputValue!=null){
             try{
                 //Create MessageDigest object for MD5
-                MessageDigest digest = MessageDigest.getInstance("MD5");
+                MessageDigest digest = MessageDigest.getInstance(MD5);
                 //Update input string in message digest
                 digest.update(inputValue.getBytes(), 0, inputValue.length());
                 //Converts message digest value in base 16 (hex)
                 return new BigInteger(1, digest.digest()).toString(16);
             } catch (NoSuchAlgorithmException ex) {
                 logger.debug(" exception occurred while encoding [{}] value with MD5 algorithm.. exception message [{}]", inputValue, ex.getMessage());
-                throw new OAuthException("MD5 encoding algorithm is not supported",ex);
+                return null;
             }
-        }
-        else{
-            throw new OAuthException("Invalid input value for the MD5 encoding");
-        }
     }
 
     /**

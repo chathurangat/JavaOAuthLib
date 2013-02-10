@@ -4,19 +4,9 @@ import java.util.Map;
 
 public class OAuthResponse {
 
-//    private int responseCode;
     private OAuthResponseCode responseCode;
     private Map<Object,Object> responseParameters;
     private int httpResponseCode;
-
-//    public int getResponseCode() {
-//        return responseCode;
-//    }
-//
-//    public void setResponseCode(int responseCode) {
-//        this.responseCode = responseCode;
-//    }
-
 
     public OAuthResponseCode getResponseCode() {
         return responseCode;

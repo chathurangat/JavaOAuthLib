@@ -18,12 +18,7 @@ import java.util.Map;
 
 import static org.fosshub.oauth.config.OAuthKeyBox.*;
 import static org.fosshub.oauth.exception.OAuthErrorCode.*;
-import static org.fosshub.oauth.http.OAuthResponseCode.*;
 
-//todo exception handling
-//todo log4j integration
-//todo define constants for oauth request parameters
-//todo handle json parsing
 public class FacebookProvider extends OAuth2Impl {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FacebookProvider.class);
@@ -45,7 +40,7 @@ public class FacebookProvider extends OAuth2Impl {
     @Override
     public String getAuthorizationUrl() throws OAuthException{
         try {
-            return String.format(REQUEST_TOKEN_ENDPOINT, URLEncoder.encode("code", URL_ENCODE) ,
+            return String.format(REQUEST_TOKEN_ENDPOINT, URLEncoder.encode(CODE, URL_ENCODE) ,
                     URLEncoder.encode(oAuthConfiguration.getApplicationId(), URL_ENCODE),
                     URLEncoder.encode(oAuthConfiguration.getRedirectUrl(), URL_ENCODE),
                     URLEncoder.encode(oAuthConfiguration.getState(), URL_ENCODE));
@@ -62,7 +57,6 @@ public class FacebookProvider extends OAuth2Impl {
             if(request.getParameterMap().containsKey(CODE)){
                 LOGGER.info(" request token was found ");
                 responseParamMap.put(REQUEST_TOKEN,request.getParameter(CODE));
-                oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
                 oAuthResponse.setResponseParameters(responseParamMap);
             }
             else if(request.getParameterMap().containsKey("error")){
@@ -119,8 +113,6 @@ public class FacebookProvider extends OAuth2Impl {
 
                 if(con.getResponseCode() == HTTP_OK){
                     LOGGER.info(" response was successfully received from the facebook.com ");
-                    //setting up the oauth success response code
-                    oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
                     String  responseString = reader.readLine();
                     if (responseString != null)
                     {
@@ -161,7 +153,6 @@ public class FacebookProvider extends OAuth2Impl {
         LOGGER.info(" get the access token from the request token [{}]", requestToken);
         if(requestToken!=null){
             OAuthResponse oAuthResponse =  new OAuthResponse();
-            oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
             responseParamMap.put(REQUEST_TOKEN,requestToken);
             oAuthResponse.setResponseParameters(responseParamMap);
             //reusing the implementation of the getAccessToken method
@@ -189,10 +180,7 @@ public class FacebookProvider extends OAuth2Impl {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
                 //setting up the http response code
                 oAuthResponse.setHttpResponseCode(con.getResponseCode());
-
                 if(con.getResponseCode() == HTTP_OK){
-                    //setting up oauth success response code
-                    oAuthResponse.setResponseCode(OAUTH_RESPONSE_SUCCESS);
                     //if the response was successfully received
                     String  responseString = reader.readLine();
                     LOGGER.info(" received the response [{}]", responseString);
@@ -262,7 +250,7 @@ public class FacebookProvider extends OAuth2Impl {
      * @return Map<Object,Object> that contains extracted key and value pair from the json object
      */
     private Map<Object,Object> parseJsonToMap(JSONObject jsonObject){
-        LOGGER.debug(" parsing JSON response [{}] to java.util.Map ", jsonObject);
+        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
         Map<Object,Object> facebookDataMap =  new HashMap<Object, Object>();
         //extracting data from json object and populate them in Map
         facebookDataMap.put(ID,jsonObject.get(ID));
@@ -286,7 +274,7 @@ public class FacebookProvider extends OAuth2Impl {
      * @throws OAuthException
      */
     private boolean isTokenResponseValid(OAuthResponse oAuthResponse,String tokenType) throws OAuthException{
-        if(oAuthResponse!=null && oAuthResponse.getResponseCode() == OAUTH_RESPONSE_SUCCESS && tokenType!=null){
+        if(oAuthResponse!=null && tokenType!=null){
             //check whether the given token is available in the response parameters
             if(oAuthResponse.getResponseParameters().containsKey(tokenType)){
                 return true;

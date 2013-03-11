@@ -1,5 +1,5 @@
 package org.fosshub.oauth.exception;
-
+//todo  implement error handler
 public final class OAuthErrorCode {
     /**
      * <p>

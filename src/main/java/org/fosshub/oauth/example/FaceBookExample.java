@@ -4,6 +4,8 @@ import org.fosshub.oauth.config.OAuthConfiguration;
 import org.fosshub.oauth.exception.OAuthException;
 import org.fosshub.oauth.http.OAuthResponse;
 import org.fosshub.oauth.provider.FacebookProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.fosshub.oauth.config.OAuthKeyBox.*;
 import java.io.BufferedReader;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 public abstract class FaceBookExample {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FaceBookExample.class);
+
     private static final String APPLICATION_ID = "429200197112086";
     private static final String APPLICATION_SECRET = "9c27359552c74fa273e9085d47a72881";
     private static final String REDIRECT_URL = "http://localhost/PhpOAuthLib/OAuthLib/examples/Facebook/FacebookExample.php";
@@ -20,7 +24,8 @@ public abstract class FaceBookExample {
 
 
     public static void main(String[] args) {
-        System.out.println(" Facebook OAuth Example ");
+//        DOMConfigurator.configure("log4j.xml");
+        LOGGER.info(" Facebook OAuth Example ");
 
         OAuthConfiguration oAuthConfiguration =  new OAuthConfiguration();
         oAuthConfiguration.setApplicationId(APPLICATION_ID);

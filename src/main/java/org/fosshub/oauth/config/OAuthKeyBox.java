@@ -21,6 +21,9 @@ public final class OAuthKeyBox {
     public static final String AUTHORIZATION_CODE = "authorization_code";
     public static final String REQUEST_TOKEN = "request_token";
     public static final String ACCESS_TOKEN = "access_token";
+    public static final String TOKEN_TYPE = "token_type";
+    public static final String EXPIRES_IN = "expires_in";
+    public static final String ID_TOKEN = "id_token";
 
     //http related keys
     public static final String HTTP_GET = "GET";

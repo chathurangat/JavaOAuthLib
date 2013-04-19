@@ -17,14 +17,13 @@ public abstract class FaceBookExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FaceBookExample.class);
 
-    private static final String APPLICATION_ID = "429200197112086";
-    private static final String APPLICATION_SECRET = "9c27359552c74fa273e9085d47a72881";
-    private static final String REDIRECT_URL = "http://localhost/PhpOAuthLib/OAuthLib/examples/Facebook/FacebookExample.php";
+    private static final String APPLICATION_ID = "323217211132988";
+    private static final String APPLICATION_SECRET = "826a87b9c1aaee6f950fdf490b346feb";
+    private static final String REDIRECT_URL = "http://localhost:8080/oauth-webapp/facebook";
     private static final String STATE = "123";
 
 
     public static void main(String[] args) {
-//        DOMConfigurator.configure("log4j.xml");
         LOGGER.info(" Facebook OAuth Example ");
 
         OAuthConfiguration oAuthConfiguration =  new OAuthConfiguration();

@@ -2,6 +2,7 @@ package org.fosshub.oauth.example;
 
 import org.fosshub.oauth.config.OAuthConfiguration;
 import org.fosshub.oauth.exception.OAuthException;
+import org.fosshub.oauth.http.OAuthResponse;
 import org.fosshub.oauth.provider.GoogleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
+
+import static org.fosshub.oauth.config.OAuthKeyBox.ACCESS_TOKEN;
 
 public class GoogleExample {
 
@@ -44,9 +48,26 @@ public class GoogleExample {
             String requestToken = reader.readLine();
             System.out.println(" request token received as user input ["+requestToken+"]\n\n");
 
+            OAuthResponse accessTokenResponse = googleProvider.getAccessTokenForRequestToken(requestToken);
+
+            String  accessToken = (String)accessTokenResponse.getResponseParameters().get(ACCESS_TOKEN);
+            System.out.println(" Access token received ["+accessToken+"] \n\n");
+
+            System.out.println(" getting the protected resource .....\n\n");
+
+            OAuthResponse protectedResourceResponse = googleProvider.getProtectedResource(accessTokenResponse);
+
+            System.out.println("displaying the protected resources retrieved ...... \n\n");
+            Map<Object,Object> protectedResourceData  =   protectedResourceResponse.getResponseParameters();
+            for(Map.Entry<Object,Object> entry:protectedResourceData.entrySet()){
+                System.out.println(" resource key ["+entry.getKey()+"] and resource value ["+entry.getValue()+"]");
+            }
+
         } catch (OAuthException e) {
-            LOGGER.debug(" OAuthException occurred and oauth exception message [{}]",e.getExceptionMessage());
-            LOGGER.debug(" OAuthException occurred and exception message [{}]", e.getMessage());
+//            LOGGER.debug(" OAuthException occurred and oauth exception message [{}]",e.getExceptionMessage());
+//            LOGGER.debug(" OAuthException occurred and exception message [{}]", e.getMessage());
+            System.out.println(" OAuthException occurred and oauth exception message ["+e.getExceptionMessage()+"]");
+            System.out.println(" OAuthException occurred and exception message ["+e.getMessage()+"]");
         } catch (IOException e) {
             System.out.println("exception occurred while getting request token from user ["+e.getMessage()+"]");
         }

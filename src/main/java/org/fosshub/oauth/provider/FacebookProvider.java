@@ -113,9 +113,17 @@ public class FacebookProvider extends OAuth2Impl {
 
                 if(con.getResponseCode() == HTTP_OK){
                     LOGGER.info(" response was successfully received from the facebook.com ");
-                    String  responseString = reader.readLine();
-                    if (responseString != null)
+//                    String  responseString = reader.readLine();
+                    String responseString = "";
+
+                    for (String line; (line = reader.readLine()) != null;) {
+                        responseString = responseString+line;
+                    }
+
+                    if (!responseString.equals(""))
                     {
+//                    if (responseString != null)
+//                    {
                         LOGGER.info("extracting the response parameters and assign them to array");
                         Map<Object,Object> responseParametersMap = OAuthUtil.populateUriQueryStringToMap(responseString);
                         oAuthResponse.setResponseParameters(responseParametersMap);
@@ -182,7 +190,10 @@ public class FacebookProvider extends OAuth2Impl {
                 oAuthResponse.setHttpResponseCode(con.getResponseCode());
                 if(con.getResponseCode() == HTTP_OK){
                     //if the response was successfully received
-                    String  responseString = reader.readLine();
+                    String responseString = "";
+                    for (String line; (line = reader.readLine()) != null;) {
+                        responseString = responseString+line;
+                    }
                     LOGGER.info(" received the response [{}]", responseString);
                     JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(responseString);
                     Map<Object,Object> jsonDataMap = parseJsonToMap(jsonObject);

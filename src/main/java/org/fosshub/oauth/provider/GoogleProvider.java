@@ -85,21 +85,10 @@ public class GoogleProvider extends OAuth2Impl{
         }
     }
 
-//    @Override
-//    public OAuthResponse getAccessToken(OAuthResponse requestTokenResponse) throws OAuthException {
-//        return null;  //To change body of implemented methods use File | Settings | File Templates.
-//    }
-//
-//    @Override
-//    public OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException {
-//        return null;  //To change body of implemented methods use File | Settings | File Templates.
-//    }
-
 
     @Override
     public OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException {
-//        LOGGER.info(" get the access token from the request token [{}]", requestToken);
-        System.out.println(" get the access token from the request token ["+requestToken+"]");
+        LOGGER.info(" get the access token from the request token [{}]", requestToken);
         if(requestToken!=null){
             OAuthResponse oAuthResponse =  new OAuthResponse();
             responseParamMap.put(REQUEST_TOKEN,requestToken);
@@ -108,8 +97,7 @@ public class GoogleProvider extends OAuth2Impl{
             return this.getAccessToken(oAuthResponse);
         }
         else {
-//            LOGGER.info(" invalid request token [{}]", requestToken);
-            System.out.println(" invalid request token ["+requestToken+"]");
+            LOGGER.info(" invalid request token [{}]", requestToken);
             throw new OAuthException(" request token is null");
         }
     }
@@ -145,8 +133,7 @@ public class GoogleProvider extends OAuth2Impl{
                 writer.write(getUriQueryString(postParametersMap));
                 writer.close();
                 os.close();
-//                LOGGER.info(" connecting with google.com .....");
-                System.out.println(" connecting with google.com .....");
+                LOGGER.info(" connecting with google.com .....");
                 con.connect();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -154,9 +141,7 @@ public class GoogleProvider extends OAuth2Impl{
                 oAuthResponse.setHttpResponseCode(con.getResponseCode());
 
                 if(con.getResponseCode() == HTTP_OK){
-//                    LOGGER.info(" response was successfully received from the google.com ");
-                    System.out.println(" response was successfully received from the google.com ");
-
+                    LOGGER.info(" response was successfully received from the google.com ");
                     String responseString = "";
                     for (String line; (line = reader.readLine()) != null;) {
                         responseString = responseString+line;
@@ -175,30 +160,25 @@ public class GoogleProvider extends OAuth2Impl{
                     }
                 }
                 else{
-//                    LOGGER.info(" access token response was not successful and error code  [{}] received", con.getResponseCode());
-                    System.out.println(" access token response was not successful and error code  ["+con.getResponseCode()+"] received");
+                    LOGGER.info(" access token response was not successful and error code  [{}] received", con.getResponseCode());
                     throw new OAuthException(ACCESS_TOKEN_NOT_RECEIVED, String.format("access token response was not successful and error code  [%d] received", con.getResponseCode()));
                 }
                 con.disconnect();
             }
             catch (MalformedURLException ex) {
-//                LOGGER.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ", ACCESS_TOKEN_ENDPOINT);
-                System.out.println(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] of the FacebookProvider class ");
+                LOGGER.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ", ACCESS_TOKEN_ENDPOINT);
                 throw new OAuthException(" MalformedURLException occurred with GoogleProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
             }
             catch (UnsupportedEncodingException ex) {
-//                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
                 LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
                 throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
             }
             catch (ProtocolException ex) {
-//                LOGGER.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]", HTTP_POST, ACCESS_TOKEN_ENDPOINT);
-                System.out.println(" Selected HTTP Request method ["+HTTP_POST+"] does not support with Access Token Endpoint ["+ACCESS_TOKEN_ENDPOINT+"]");
+                LOGGER.debug(" Selected HTTP Request method [{}] does not support with Access Token Endpoint [{}]", HTTP_POST, ACCESS_TOKEN_ENDPOINT);
                 throw new OAuthException(String.format("Selected HTTP Request method [%s] does not support with Access Token Endpoint [%s]", HTTP_POST, ACCESS_TOKEN_ENDPOINT),ex);
             }
             catch (IOException ex) {
-//                LOGGER.debug(" IOException occurred in the FacebookProvider class and exception message [{}]", ex.getMessage());
-                LOGGER.debug(" IOException occurred in the FacebookProvider class and exception message ["+ex.getMessage()+"]");
+                LOGGER.debug(" IOException occurred in the FacebookProvider class and exception message [{}]", ex.getMessage());
                 throw new OAuthException("IOException occurred in the FacebookProvider class",ex);
             }
         }
@@ -279,8 +259,7 @@ public class GoogleProvider extends OAuth2Impl{
             try {
                 url = url +thisEntry.getKey()+"="+URLEncoder.encode((String)thisEntry.getValue(),URL_ENCODE)+"&";
             } catch (UnsupportedEncodingException ex) {
-//                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
-                System.out.println("URL Encoder ["+URL_ENCODE+"] is not supported ");
+                LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
                 throw new OAuthException(String.format("URL Encode [%s] is not supported", URL_ENCODE),ex);
             }
         }
@@ -308,8 +287,7 @@ public class GoogleProvider extends OAuth2Impl{
                 return true;
             }
             else {
-//                LOGGER.info("response does not contain the Token [{}]", tokenType);
-                System.out.println("response does not contain the Token ["+tokenType+"]");
+                LOGGER.info("response does not contain the Token [{}]", tokenType);
                 throw new OAuthException(TOKEN_MISSING, String.format("response does not contain the token [%s]", tokenType));
             }
         }
@@ -351,21 +329,16 @@ public class GoogleProvider extends OAuth2Impl{
      * @return Map<Object,Object> that contains extracted key and value pair from the json object
      */
     private Map<Object,Object> parseProtectedResourceJsonResponseToMap(JSONObject jsonObject){
-//        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
-        System.out.println(" parsing JSON response ["+jsonObject+"] and store response data in java.util.Map ");
+        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
         Map<Object,Object> googleAccessTokenResponseMap =  new HashMap<Object, Object>();
         //extracting data from json object and populate them in Map
         googleAccessTokenResponseMap.put(ID,jsonObject.get(ID));
         googleAccessTokenResponseMap.put(PICTURE,jsonObject.get(PICTURE));
         googleAccessTokenResponseMap.put(NAME,jsonObject.get(NAME));
         googleAccessTokenResponseMap.put(GIVEN_NAME,jsonObject.get(GIVEN_NAME));
+        googleAccessTokenResponseMap.put(FAMILY_NAME,jsonObject.get(FAMILY_NAME));
         return googleAccessTokenResponseMap;
     }
-
-//    @Override
-//    public OAuthResponse getProtectedResource(OAuthResponse accessTokenResponse) throws OAuthException {
-//        return null;  //To change body of implemented methods use File | Settings | File Templates.
-//    }
 
     public Map<Object, Object> getResponseParamMap() {
         return responseParamMap;

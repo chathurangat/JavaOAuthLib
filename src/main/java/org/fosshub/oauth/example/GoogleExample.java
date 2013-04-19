@@ -64,12 +64,10 @@ public class GoogleExample {
             }
 
         } catch (OAuthException e) {
-//            LOGGER.debug(" OAuthException occurred and oauth exception message [{}]",e.getExceptionMessage());
-//            LOGGER.debug(" OAuthException occurred and exception message [{}]", e.getMessage());
-            System.out.println(" OAuthException occurred and oauth exception message ["+e.getExceptionMessage()+"]");
-            System.out.println(" OAuthException occurred and exception message ["+e.getMessage()+"]");
+            LOGGER.error(" OAuthException occurred and oauth exception message [{}]",e.getExceptionMessage());
+            LOGGER.error(" OAuthException occurred and exception message [{}]", e.getMessage());
         } catch (IOException e) {
-            System.out.println("exception occurred while getting request token from user ["+e.getMessage()+"]");
+            LOGGER.error("exception occurred while getting request token from user [{}]",e.getMessage());
         }
     }
 }

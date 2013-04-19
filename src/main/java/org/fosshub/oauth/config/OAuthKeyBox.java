@@ -34,15 +34,15 @@ public final class OAuthKeyBox {
     public static final String MD5 = "MD5";
     public static final String URL_ENCODE = "UTF-8";
 
-    //facebook related keys
-    public static final String ID = "id";
-    public static final String NAME = "name";
-    public static final String FIRST_NAME = "first_name";
-    public static final String LAST_NAME = "last_name";
-    public static final String USERNAME = "username";
-    public static final String GENDER = "gender";
-    public static final String HOME_TOWN = "hometown";
-    public static final String LOCATION = "location";
+//    //facebook related keys
+//    public static final String ID = "id";
+//    public static final String NAME = "name";
+//    public static final String FIRST_NAME = "first_name";
+//    public static final String LAST_NAME = "last_name";
+//    public static final String USERNAME = "username";
+//    public static final String GENDER = "gender";
+//    public static final String HOME_TOWN = "hometown";
+//    public static final String LOCATION = "location";
 
 }
 

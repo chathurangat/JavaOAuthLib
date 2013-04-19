@@ -19,28 +19,25 @@ import java.util.Map;
 import static org.fosshub.oauth.config.OAuthKeyBox.*;
 import static org.fosshub.oauth.exception.OAuthErrorCode.*;
 
-public class FacebookProvider extends OAuth2Impl {
+public class BitlyProvider extends OAuth2Impl{
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FacebookProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BitlyProvider.class);
 
-    private static final String REQUEST_TOKEN_ENDPOINT = "https://www.facebook.com/dialog/oauth?response_type=%s&client_id=%s&redirect_uri=%s&state=%s";
-    private static final String ACCESS_TOKEN_ENDPOINT = "https://graph.facebook.com/oauth/access_token";
-    private static final String PROTECTED_RESOURCE_ENDPOINT = "https://graph.facebook.com/me?access_token=%s";
+    private static final String REQUEST_TOKEN_ENDPOINT = "https://bitly.com/oauth/authorize?response_type=%s&client_id=%s&redirect_uri=%s&state=%s";
+    private static final String ACCESS_TOKEN_ENDPOINT = "https://api-ssl.bitly.com/oauth/access_token";
+    private static final String PROTECTED_RESOURCE_ENDPOINT = "https://api-ssl.Bitly.com/v3/user/info?access_token=%s";
 
     private Map<Object,Object> responseParamMap  = new HashMap<Object, Object>();
     private OAuthConfiguration oAuthConfiguration;
 
-    //facebook related keys for getting protected resource
+    //google related keys for getting protected  resource
     private static final String ID = "id";
+    private static final String PICTURE = "picture";
     private static final String NAME = "name";
-    private static final String FIRST_NAME = "first_name";
-    private static final String LAST_NAME = "last_name";
-    private static final String USERNAME = "username";
-    private static final String GENDER = "gender";
-    private static final String HOME_TOWN = "hometown";
-    private static final String LOCATION = "location";
+    private static final String FAMILY_NAME = "family_name";
+    private static final String GIVEN_NAME = "given_name";
 
-    public FacebookProvider(OAuthConfiguration oAuthConfiguration){
+    public BitlyProvider(OAuthConfiguration oAuthConfiguration){
         this.oAuthConfiguration = oAuthConfiguration;
     }
 
@@ -48,7 +45,7 @@ public class FacebookProvider extends OAuth2Impl {
      * {@inheritDoc}
      */
     @Override
-    public String getAuthorizationUrl() throws OAuthException{
+    public String getAuthorizationUrl() throws OAuthException {
         try {
             return String.format(REQUEST_TOKEN_ENDPOINT, URLEncoder.encode(CODE, URL_ENCODE) ,
                     URLEncoder.encode(oAuthConfiguration.getApplicationId(), URL_ENCODE),
@@ -86,6 +83,26 @@ public class FacebookProvider extends OAuth2Impl {
         }
     }
 
+
+    @Override
+    public OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException {
+        LOGGER.info(" get the access token from the request token [{}]", requestToken);
+        if(requestToken!=null){
+            OAuthResponse oAuthResponse =  new OAuthResponse();
+            responseParamMap.put(REQUEST_TOKEN,requestToken);
+            oAuthResponse.setResponseParameters(responseParamMap);
+            //reusing the implementation of the getAccessToken method
+            return this.getAccessToken(oAuthResponse);
+        }
+        else {
+            LOGGER.info(" invalid request token [{}]", requestToken);
+            throw new OAuthException(" request token is null");
+        }
+    }
+
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -114,7 +131,7 @@ public class FacebookProvider extends OAuth2Impl {
                 writer.write(getUriQueryString(postParametersMap));
                 writer.close();
                 os.close();
-                LOGGER.info(" connecting with facebook.com .....");
+                LOGGER.info(" connecting with google.com .....");
                 con.connect();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -122,8 +139,25 @@ public class FacebookProvider extends OAuth2Impl {
                 oAuthResponse.setHttpResponseCode(con.getResponseCode());
 
                 if(con.getResponseCode() == HTTP_OK){
-                    LOGGER.info(" response was successfully received from the facebook.com ");
-//                    String  responseString = reader.readLine();
+                    LOGGER.info(" response was successfully received from the bitly.com ");
+//                    String responseString = "";
+//                    for (String line; (line = reader.readLine()) != null;) {
+//                        responseString = responseString+line;
+//                    }
+//
+//                    if (!responseString.equals(""))
+//                    {
+////                        LOGGER.info("extracting the response parameters and assign them to array");
+//                        System.out.println("extracting the response parameters and assign them to array ["+responseString);
+//                        JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(responseString);
+//                        LOGGER.info(" json response retrieved as string [{}]",responseString);
+//                        Map<Object,Object> responseParametersMap = parseAccessTokenJsonResponseToMap(jsonObject);
+//                        for (Map.Entry<Object, Object> entry : responseParametersMap.entrySet()) {
+//                            LOGGER.info(" key [{}] and value [{}]",entry.getKey(),entry.getValue());
+//                        }
+//                        oAuthResponse.setResponseParameters(responseParametersMap);
+//                    }
+
                     String responseString = "";
 
                     for (String line; (line = reader.readLine()) != null;) {
@@ -132,10 +166,12 @@ public class FacebookProvider extends OAuth2Impl {
 
                     if (!responseString.equals(""))
                     {
-//                    if (responseString != null)
-//                    {
                         LOGGER.info("extracting the response parameters and assign them to array");
                         Map<Object,Object> responseParametersMap = OAuthUtil.populateUriQueryStringToMap(responseString);
+                                                for (Map.Entry<Object, Object> entry : responseParametersMap.entrySet()) {
+//                            LOGGER.info(" key [{}] and value [{}]",entry.getKey(),entry.getValue());
+                                                    System.out.println(" key ["+entry.getKey()+"] and value ["+entry.getValue()+"]");
+                        }
                         oAuthResponse.setResponseParameters(responseParametersMap);
                     }
                 }
@@ -147,7 +183,7 @@ public class FacebookProvider extends OAuth2Impl {
             }
             catch (MalformedURLException ex) {
                 LOGGER.debug(" MalformedURLException occurred with the ACCESS_TOKEN_ENDPOINT URL [{}] of the FacebookProvider class ", ACCESS_TOKEN_ENDPOINT);
-                throw new OAuthException(" MalformedURLException occurred with FacebookProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
+                throw new OAuthException(" MalformedURLException occurred with GoogleProvider ACCESS_TOKEN_ENDPOINT URL ["+ACCESS_TOKEN_ENDPOINT+"] ",ex);
             }
             catch (UnsupportedEncodingException ex) {
                 LOGGER.debug("URL Encoder [{}] is not supported ", URL_ENCODE);
@@ -166,21 +202,7 @@ public class FacebookProvider extends OAuth2Impl {
     }
 
 
-    @Override
-    public OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException {
-        LOGGER.info(" get the access token from the request token [{}]", requestToken);
-        if(requestToken!=null){
-            OAuthResponse oAuthResponse =  new OAuthResponse();
-            responseParamMap.put(REQUEST_TOKEN,requestToken);
-            oAuthResponse.setResponseParameters(responseParamMap);
-            //reusing the implementation of the getAccessToken method
-            return this.getAccessToken(oAuthResponse);
-        }
-        else {
-            LOGGER.info(" invalid request token [{}]", requestToken);
-            throw new OAuthException(" request token is null");
-        }
-    }
+
 
     @Override
     public OAuthResponse getProtectedResource(OAuthResponse accessTokenResponse) throws OAuthException{
@@ -206,7 +228,7 @@ public class FacebookProvider extends OAuth2Impl {
                     }
                     LOGGER.info(" received the response [{}]", responseString);
                     JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(responseString);
-                    Map<Object,Object> jsonDataMap = parseJsonToMap(jsonObject);
+                    Map<Object,Object> jsonDataMap = parseProtectedResourceJsonResponseToMap(jsonObject);
                     oAuthResponse.setResponseParameters(jsonDataMap);
                 }
                 else{
@@ -236,13 +258,15 @@ public class FacebookProvider extends OAuth2Impl {
         return oAuthResponse;
     }
 
+
+
     /**
      * <p>
      *     build the query string using the provided map of parameters.
      * </p>
-     * @param paramMap will be {@link Map} and that contains set of parameters as key and value paris
+     * @param paramMap will be {@link java.util.Map} and that contains set of parameters as key and value paris
      * @return  built Uri Query String as {@link String}
-     * @throws OAuthException
+     * @throws org.fosshub.oauth.exception.OAuthException
      */
     private String getUriQueryString(Map<String,String> paramMap) throws OAuthException{
         String url = "";
@@ -262,37 +286,15 @@ public class FacebookProvider extends OAuth2Impl {
         return url;
     }
 
-    /**
-     * <p>
-     * extracting the data(as key and value) from the json object and populate those extracted data in a
-     * java Map as key and value pairs
-     * </p>
-     * @param jsonObject  instance of  {@link JSONObject}
-     * @return Map<Object,Object> that contains extracted key and value pair from the json object
-     */
-    private Map<Object,Object> parseJsonToMap(JSONObject jsonObject){
-        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
-        Map<Object,Object> facebookDataMap =  new HashMap<Object, Object>();
-        //extracting data from json object and populate them in Map
-        facebookDataMap.put(ID,jsonObject.get(ID));
-        facebookDataMap.put(NAME,jsonObject.get(NAME));
-        facebookDataMap.put(FIRST_NAME,jsonObject.get(FIRST_NAME));
-        facebookDataMap.put(LAST_NAME,jsonObject.get(LAST_NAME));
-        facebookDataMap.put(USERNAME,jsonObject.get(USERNAME));
-        facebookDataMap.put(GENDER,jsonObject.get(GENDER));
-        facebookDataMap.put(HOME_TOWN,jsonObject.getJSONObject(HOME_TOWN).get(NAME));
-        facebookDataMap.put(LOCATION,jsonObject.getJSONObject(LOCATION).get(NAME));
-        return facebookDataMap;
-    }
 
     /**
      *<p>
      *     check the validity of the given oauth response against the provided token type
      *</p>
-     * @param oAuthResponse as {@link OAuthResponse}
+     * @param oAuthResponse as {@link org.fosshub.oauth.http.OAuthResponse}
      * @param tokenType as {@link String}
      * @return true if the given response is valid with the token type. otherwise returns false.
-     * @throws OAuthException
+     * @throws org.fosshub.oauth.exception.OAuthException
      */
     private boolean isTokenResponseValid(OAuthResponse oAuthResponse,String tokenType) throws OAuthException{
         if(oAuthResponse!=null && tokenType!=null){
@@ -311,5 +313,63 @@ public class FacebookProvider extends OAuth2Impl {
         else{
             throw new OAuthException(INVALID_OAUTH_RESPONSE,"Invalid oauth response....");
         }
+    }
+
+
+    /**
+     * <p>
+     * extracting the data(as key and value) from the json object and populate those extracted data in a
+     * java Map as key and value pairs
+     * </p>
+     * @param jsonObject  instance of  {@link net.sf.json.JSONObject}
+     * @return Map<Object,Object> that contains extracted key and value pair from the json object
+     */
+    private Map<Object,Object> parseAccessTokenJsonResponseToMap(JSONObject jsonObject){
+        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
+        Map<Object,Object> googleAccessTokenResponseMap =  new HashMap<Object, Object>();
+        //extracting data from json object and populate them in Map
+        googleAccessTokenResponseMap.put(ACCESS_TOKEN,jsonObject.get(ACCESS_TOKEN));
+        googleAccessTokenResponseMap.put(TOKEN_TYPE,jsonObject.get(TOKEN_TYPE));
+        googleAccessTokenResponseMap.put(EXPIRES_IN,jsonObject.get(EXPIRES_IN));
+        googleAccessTokenResponseMap.put(ID_TOKEN,jsonObject.get(ID_TOKEN));
+        return googleAccessTokenResponseMap;
+    }
+
+
+    /**
+     * <p>
+     * extracting the data(as key and value) from the json object and populate those extracted data in a
+     * java Map as key and value pairs
+     * </p>
+     * @param jsonObject  instance of  {@link net.sf.json.JSONObject}
+     * @return Map<Object,Object> that contains extracted key and value pair from the json object
+     */
+    private Map<Object,Object> parseProtectedResourceJsonResponseToMap(JSONObject jsonObject){
+//        LOGGER.debug(" parsing JSON response [{}] and store response data in java.util.Map ", jsonObject);
+        System.out.println(" parsing JSON response ["+jsonObject+"] and store response data in java.util.Map ");
+        Map<Object,Object> googleAccessTokenResponseMap =  new HashMap<Object, Object>();
+        //extracting data from json object and populate them in Map
+        googleAccessTokenResponseMap.put(ID,jsonObject.get(ID));
+        googleAccessTokenResponseMap.put(PICTURE,jsonObject.get(PICTURE));
+        googleAccessTokenResponseMap.put(NAME,jsonObject.get(NAME));
+        googleAccessTokenResponseMap.put(GIVEN_NAME,jsonObject.get(GIVEN_NAME));
+        googleAccessTokenResponseMap.put(FAMILY_NAME,jsonObject.get(FAMILY_NAME));
+        return googleAccessTokenResponseMap;
+    }
+
+    public Map<Object, Object> getResponseParamMap() {
+        return responseParamMap;
+    }
+
+    public void setResponseParamMap(Map<Object, Object> responseParamMap) {
+        this.responseParamMap = responseParamMap;
+    }
+
+    public OAuthConfiguration getoAuthConfiguration() {
+        return oAuthConfiguration;
+    }
+
+    public void setoAuthConfiguration(OAuthConfiguration oAuthConfiguration) {
+        this.oAuthConfiguration = oAuthConfiguration;
     }
 }

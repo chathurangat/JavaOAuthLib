@@ -2,9 +2,14 @@ package org.fosshub.oauth.api;
 
 import org.fosshub.oauth.exception.OAuthException;
 import org.fosshub.oauth.http.OAuthResponse;
-
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * <p>
+ *     implementation class for the OAuth2 protocol.
+ *
+ * </p>
+ */
 public interface OAuth2{
     /**
      * <p>
@@ -15,6 +20,14 @@ public interface OAuth2{
      */
     String getAuthorizationUrl() throws OAuthException;
 
+    /**
+     * <p>
+     *     method to get the request token from the http servlet request
+     * </p>
+     * @param request as {@link HttpServletRequest}
+     * @return  instance of {@link OAuthResponse} encapsulated with the request token
+     * @throws OAuthException
+     */
     OAuthResponse getRequestToken(HttpServletRequest request) throws OAuthException;
 
     /**
@@ -38,6 +51,14 @@ public interface OAuth2{
      */
     OAuthResponse getAccessTokenForRequestToken(String requestToken) throws OAuthException;
 
+    /**
+     * <p>
+     *     accessing the resource data by providing the access token response received
+     * </p>
+     * @param accessTokenResponse as {@link OAuthResponse}
+     * @return instance of {@link OAuthResponse} with encapsulated response parameters (including all the protected resource data requested)
+     * @throws OAuthException if any exception occurs
+     */
     OAuthResponse getProtectedResource(OAuthResponse accessTokenResponse) throws OAuthException;
 }
 
